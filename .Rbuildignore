@@ -11,3 +11,5 @@ sftp-config.json
 .Rproj
 ^docs/
 .tar.gz
+^.*\.Rproj$
+^\.Rproj\.user$

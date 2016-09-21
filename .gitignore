@@ -19,4 +19,14 @@ docs/assets
 docs/index.html
 docs/rd.Rmd
 docs/rd.html
+<<<<<<< HEAD
 .Rproj.user
+=======
+.lintr_cache
+revdep/checks\.rds
+tests/testthat/test_cache
+_gh-pages
+
+# user file
+notes/
+>>>>>>> 7bcbf09f11eaa533333aa6017ea75e1b4d6a56ac

@@ -11,7 +11,7 @@ expect_data_frame <- function(x, colnames) {
 }
 
 expect_fit_trajectory <- function(x, data) {
-  expect_data_frame(x$xy, c("x", "y", "subjid", "idx", "yfit", "z", "zfit")) # nolint
+  expect_data_frame(x$xy, c("x", "y", "idx", "yfit", "z", "zfit")) # nolint
   expect_class(x$fit, "numeric") # nolint
   expect_data_frame(x$fitgrid, c("x", "y", "z", "dy", "dz")) # nolint
   expect_data_frame(x$checkpoint, c("x", "y", "z", "zcat")) # nolint
@@ -28,12 +28,10 @@ expect_fit_trajectory <- function(x, data) {
 
 
 test_that("basic class obj test", {
-
   dt <- subset(cpp, subjid == 2)
-  fit <- fit_trajectory(dt, get_fit(cpp, y_var = "wtkg"))
+  fit <- fit_trajectory(dt, get_fit(cpp, y_var = "wtkg", method = "fda"))
 
   expect_fit_trajectory(fit, dt)
-
 })
 
 
@@ -55,5 +53,4 @@ test_that("plots", {
   expect_silent({
     plot_zvelocity(fit)
   })
-
 })

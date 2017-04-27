@@ -15,9 +15,13 @@ fit_method <- function(obj, ...)
 #' plot(fit)
 #' }
 #' @export
-#' @importFrom brokenstick brokenstick
 #' @importFrom stats na.omit
+# @importFrom brokenstick brokenstick
 fit_method.brokenstick <- function(dat, ...) {
+
+  # brokenstick is still not publicly available...
+  if (!requireNamespace("brokenstick", quietly = TRUE))
+    stop("Can't apply brokenstick method as the brokenstick package isn't installed.")
 
   dots <- list(...)
 
@@ -46,12 +50,12 @@ fit_method.brokenstick <- function(dat, ...) {
   if (length(knots) == 1)
     knots <- seq(mn, mx, length = knots)[-knots]
 
-  fit_obj <- brokenstick(
+  fit_obj <- brokenstick::brokenstick(
     x = dat$x,
     y = dat$y,
-    subject = dat$subjid,
+    subjid = dat$subjid,
     knots = knots,
-    Boundary.knots = c(mn, mx))
+    boundary = c(mn, mx))
 
   fit_apply <- function(dat, xg = NULL, cpx = NULL, fit) {
 
@@ -321,6 +325,10 @@ fit_method.wand <- function(dat, ...) {
 #' }
 #' @export
 fit_method.face <- function(dat, ...) {
+
+  # latest face not on CRAN...
+  if (!requireNamespace("face", quietly = TRUE))
+    stop("Can't apply face method as the face package isn't installed.")
 
   dots <- list(...)
   knots <- 10

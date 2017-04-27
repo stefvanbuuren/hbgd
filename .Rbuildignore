@@ -11,18 +11,4 @@ sftp-config.json
 .Rproj
 ^docs/
 .tar.gz
-<<<<<<< HEAD
-^.*\.Rproj$
-^\.Rproj\.user$
-=======
-.lintr.*
-^codecov\.yml$
-^\.helper_functions$
-tests/testthat/test_cache
-_gh-pages
-^notes$
-<<<<<<< HEAD
->>>>>>> 7bcbf09f11eaa533333aa6017ea75e1b4d6a56ac
-=======
 scripts/
->>>>>>> f416f35333845a1927a48a0767a82ea90324a3a9

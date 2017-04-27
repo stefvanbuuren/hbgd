@@ -1,9 +1,21 @@
 
 
+(function(){
+  # init
+  # only cache per day
+  if (file.exists("test_cache")) {
+    creation_date <- format.Date(file.info("test_cache")$ctime, "%Y-%m-%d")
+    if (!identical(creation_date, Sys.Date())) {
+      unlink("test_cache", recursive = TRUE)
+    }
+  }
+
+  dir.create("test_cache", recursive = TRUE, showWarnings = FALSE)
+})()
+
 get_cached_data <- function(name, fn) {
   file_name <- file.path("test_cache", paste(name, ".Rda", sep = ""))
   if (!file.exists(file_name)) {
-    dir.create("test_cache", showWarnings = FALSE)
     result <- fn()
     save(result, file = file_name)
   }
@@ -12,9 +24,14 @@ get_cached_data <- function(name, fn) {
   get("result", env)
 }
 
+# delete_cached_data <- function(name) {
+#   unlink(file.path("test_cache", paste(name, ".Rda", sep = "")))
+# }
+
+
 facefit_fn <- function() {
   get_cached_data("facefit_obj", function() {
-    smc <- get_smocc_data()[1:2000, ]
+    smc <- get_smocc_data()[1:200, ]
 
     get_fit(smc, y_var = "haz", method = "face")
   })
@@ -22,7 +39,7 @@ facefit_fn <- function() {
 
 smc_tr_fn <- function() {
   get_cached_data("smc_tr", function() {
-    smc <- get_smocc_data()[1:2000, ]
+    smc <- get_smocc_data()[1:200, ]
     facefit <- facefit_fn() # nolint
     fit_all_trajectories(smc, facefit)
   })
@@ -124,7 +141,7 @@ expect_rbokeh_plot_matrix <- function(pm, type_list, ncol, check_data = NULL) {
       expect_rbokeh(p, type_list[[i]]) # nolint
 
       if (!is.null(check_data)) {
-        expect_equivalent(p$x$spec$model$plot$attributes$title, check_data_cols[i]) # nolint
+        expect_equivalent(p$x$spec$model$title$attributes$text, check_data_cols[i]) # nolint
       }
     })
 }
@@ -171,7 +188,6 @@ test_that("dealing with longitudinal data", {
   ))
   expect_equivalent(nrow(time_dt), 1912)
   expect_class(attr(time_dt, "hbgd"), "list")
-
 })
 
 
@@ -330,7 +346,7 @@ expect_standard <- function(standard_name, types, coef_data, time) {
 test_that("WHO growth standards", {
   expect_standard(
     "who",
-    c("bmi", "htcm", "hcircm", "muaccm", "ss", "tsftmm", "wtkg")
+    c("bmi", "htcm", "hcircm", "muaccm", "ssftmm", "tsftmm", "wtkg")
   )
 
   expect_standard(
@@ -433,17 +449,12 @@ test_that("ggplot2", {
     )
   }
 
-  p <- ggplot(data = subset(cpp, subjid == 8), aes(x = agedays, y = htcm))
-  who_p <- geom_who(p, x = seq(0, 2600, by = 10)) + geom_point()
+  who_p <- ggplot(data = subset(cpp, subjid == 8), aes(x = agedays, y = htcm)) +
+    geom_who(x_seq = seq(0, 2600, by = 10), y_var = "htcm") +
+    geom_point()
 
-  expect_layer_type(who_p, 1, "GeomPolygon")
-  expect_layer_type(who_p, 2, "GeomPath")
-  expect_layer_type(who_p, 3, "GeomPolygon")
-  expect_layer_type(who_p, 4, "GeomPath")
-  expect_layer_type(who_p, 5, "GeomPolygon")
-  expect_layer_type(who_p, 6, "GeomPath")
-  expect_layer_type(who_p, 7, "GeomPath")
-  expect_layer_type(who_p, 8, "GeomPoint")
+  expect_layer_type(who_p, 1, "GeomGrowthStandard")
+  expect_layer_type(who_p, 2, "GeomPoint")
 
   expect_warning_plot(who_p, "Removed 1 rows containing missing values")
 
@@ -521,7 +532,6 @@ context("Simple Exploration")
 
 test_that("Data distributions", {
 
-
   expect_rbokeh_plot_matrix(
     plot_univar(cpp, subject = TRUE, width = 250, height = 250, ncol = 3),
     rep("Quad", 25),
@@ -534,7 +544,6 @@ test_that("Data distributions", {
     4,
     get_time_data(cpp)
   )
-
 })
 
 
@@ -576,7 +585,7 @@ test_that("special plots", {
 context("Modeling Methods")
 
 test_that("fitting a model to a data set", {
-  smc <- get_smocc_data()[1:2000, ]
+  smc <- get_smocc_data()[1:200, ]
 
   for (meth in get_avail_methods()) {
     y_var <- switch(meth,
@@ -626,22 +635,22 @@ test_that("fit all trajectories", {
 })
 
 test_that("Assessing fits with holdouts", {
-  smc <- get_smocc_data()[1:2000, ]
+  smc <- get_smocc_data()[1:200, ]
 
   set.seed(1234)
   smc2 <- add_holdout_ind(smc)
 
   mse_ans <- list(
-    "brokenstick" = 0.1798087,
-    "face" = 0.1170519,
+    "brokenstick" = 0.21692451,
+    "face" = 0.20002584,
     "fda" = NA,
-    "gam" = 0.3668065,
+    "gam" = 0.24876602,
     "loess" = NA,
-    "lwmod" = 0.3159714,
-    "rlm" = 0.4613727,
+    "lwmod" = 0.18871031,
+    "rlm" = 0.23332911,
     "sitar" = NA,
-    "smooth.spline" = 0.432525,
-    "wand" = 0.2637936
+    "smooth.spline" = 0.31762098,
+    "wand" = 0.17557084
   )
   for (meth in get_avail_methods()) {
     if (meth %in% c("fda", "loess", "sitar")) {
@@ -671,9 +680,7 @@ test_that("Assessing fits with holdouts", {
       mse_ans[[meth]],
       tolerance = 0.00002
     )
-
   }
-
 })
 
 context("Trelliscope")
